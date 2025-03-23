@@ -1,3 +1,4 @@
+import secrets
 
 # create a program that encrypts and decrypts a message using RSA
 # 1. convert the message to ascii digits and back to
@@ -51,7 +52,6 @@ def find_d(a, n):
         raise ValueError(f"No modular inverse exists because gcd({a}, {n}) ≠ 1")
     return x % n  # Ensure the result is positive
 
-import secrets
 def random_prime_number(n_bit):
     """Generates a random prime number of n_bit length"""
     # from miller_rabins_test import is_prime
@@ -62,23 +62,23 @@ def random_prime_number(n_bit):
         num = secrets.randbits(64)
     # check if the number is prime
     from sympy import isprime
-    while isprime(num) == False:
+    while not isprime(num):
         num = secrets.randbits(64)
     return num
 
 def main(p, q):
     print("Welcome to simple RSA encryption")
     while True:
-        print("1. Encrypt a file\n2. Decrypt a file\n3. Generate pivate key\n4. Quit")
+        print("1. Encrypt a file\n2. Decrypt a file\n3. Generate private key\n4. Quit")
         choice = input("Enter your choice: ")
         n = p * q
         phi_n = (p - 1) * (q - 1)
-        select_e = [3,5,17,65537]
-        e =  17 #random.choice(select_e)
+        # select_e = [3,5,17,65537]
+        e = 17  # random.choice(select_e)
         d = find_d(e, phi_n)
         print(d)
         if choice == "1":
-            print("1. Encrypt from file path\n2. Enrypt via text input")
+            print("1. Encrypt from file path\n2. Encrypt via text input")
             option = input("Enter an option: ")
             if option == "1":
                 file_path = input("Enter file path: ")
@@ -88,13 +88,12 @@ def main(p, q):
                 with open(fr"{file_path}", "w+", encoding="utf-8") as file:
                     encrypted_message_str = "".join(map(str, encrypted_message))
                     file.write(encrypted_message_str)
-                return  0
+                return 0
 
             elif option == '2':
                 word_to_encrypt = input("Enter text to encrypt: ")
                 encrypted_message = encrypt(word_to_encrypt, e, n)
                 return encrypted_message
-
 
         if choice == "2":
             print("1. Decrypt from file path\n2. Decrypt via text input")
