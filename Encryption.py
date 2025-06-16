@@ -8,28 +8,61 @@ import secrets
 # 1
 
 # create a function that converts letters, numbers and symbols to their ascii numerics
-def convert_to_ascii(message):
+def convert_to_ascii(message: str)-> list:
+    """Convert Alphabets, digits or symbols to their ascii code
+    Paramerer
+        message: str
+            plaintext
+    Return: list
+        Converted message from plaintext to ascii
+    """
     converted = [ord(i) for i in message]
     return converted
 
 # Create a function that reverts ascii numbers back ti plaintext
-def revert_ascii(message):
-    # takes ascii numerics and converts back to their character representation
-    converted_message = "".join([chr(i) for i in message])
+def revert_ascii(message: list)-> str:
+    """Converts ASCII code to plaintext
+    Parameter
+        messagge: list
+            ascii digits
+    Return: str
+        Converted ascii code to plaintext
+    """
+    converted_message ="".join([chr(i) for i in message]) # takes ascii numerics and converts back to their character representation
     return converted_message
 
 # 2
-def encrypt(m, e, n):
+def encrypt(m: str, e: int, n: int)-> str:
+    """Performs an RSA encryption
+    Parameters
+        m: str
+            message in plaintext to be encrypted
+
+        e, n: int
+            public key to encrypt the messagge
+
+    Return: str
+        an encrypted version of the message
+
+    """
     # rsa encryption formula = m^e mod n
-    # convert all the information in the message to ascii
-    converted = convert_to_ascii(m)
+    converted = convert_to_ascii(m) # convert all the information in the message to ascii
     # perform RSA encryption conversion
     cipher_text = [str(pow(i, e, n)) for i in converted]
 
     return " ".join(cipher_text)
 
 # 3
-def decrypt(cipher_text, d, n):
+def decrypt(cipher_text: str, d: int, n: int)-> str:
+    """Cnverts an RSA encryption back to plaintext
+    Parameter
+        cipher_text: str
+            Encrypted text
+        d, n: int
+             Private keys
+    Return: str
+        Converted plaintext
+    """
     #  to decipher cipher_text ^ d mod n
     # convert each message in the cipher_text back to the original ascii numerics
     decipher_text = [pow(int(i), d, n) for i in cipher_text.split()]
@@ -54,7 +87,6 @@ def find_d(a, n):
 
 def random_prime_number(n_bit):
     """Generates a random prime number of n_bit length"""
-    # from miller_rabins_test import is_prime
     # generate a number of 64 bits using the secrets module
     num = secrets.randbits(n_bit)
     # check if the number is even or ends with 5
@@ -113,11 +145,21 @@ def main(p, q):
 
         elif choice == '3':
             n_bit = int(input('How many bits should the private key be: '))
-            key = random_prime_number(n_bit)
-            print(f'Your private key is: {key}')
-            return key
+            p =input("Enter p: ") # 7283167306650267509 # random_prime_number(n_bit)
+            q =input("Enter q: ") # 4571792070546891821 #random_prime_number(n_bit)
+            phi_n = (p-1) * (q-1)
+            print(phi_n, "phi")
+            d = find_d(e, phi_n)
+
+            print(f'Your private key is: {d}')
+            return d
 
         elif choice == '4':
             exit()
 
-print(main(9543799241132494843, 8967378784017454991))
+# print(main(7283167306650267509, 4571792070546891821))
+
+print(main(int(input("Enter p: ")), int(input("Enter q: "))))
+
+
+# TODO: if user is tryingg to decript a file or input that is in plaintext. it should warn user, instead of traceback
