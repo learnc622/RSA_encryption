@@ -1,4 +1,8 @@
 import secrets
+import random, string
+import hashlib
+import time
+
 
 # create a program that encrypts and decrypts a message using RSA
 # 1. convert the message to ascii digits and back to
@@ -79,11 +83,11 @@ def extended_euclidean(a, b):
     y = x1 - (a // b) * y1
     return gcd, x, y
 
-def find_d(a, n):
-    gcd, x, y = extended_euclidean(a, n)
+def find_d(e, phi_n):
+    gcd, x, y = extended_euclidean(e, phi_n)
     if gcd != 1:
-        raise ValueError(f"No modular inverse exists because gcd({a}, {n}) ≠ 1")
-    return x % n  # Ensure the result is positive
+        raise ValueError(f"No modular inverse exists because gcd({e}, {phi_n}) ≠ 1")
+    return x % phi_n  # Ensure the result is positive
 
 def random_prime_number(n_bit):
     """Generates a random prime number of n_bit length"""
@@ -98,6 +102,71 @@ def random_prime_number(n_bit):
         num = secrets.randbits(64)
     return num
 
+def generate_keys():
+    """
+    Create RSA encryption keys
+    Return:
+        Public Keys (e,n) and Private key (d)
+    """
+    bits = [i for i in range(32, 62)]
+    n_bits = random.choice(bits)
+    p = random_prime_number(n_bits)
+    q = random_prime_number(n_bits)
+    n = p * q
+    phi_n = (p-1)*(q-1)
+    e = 65537
+    d = find_d(e, phi_n)
+    public_key = (e, phi_n)
+    chars = string.ascii_letters + string.digits
+    salt = "".join(random.choice(chars) for char in range(6))
+    # print(salt)
+    hashed_key = hashlib.sha256((salt+str(d)).encode()).hexdigest()
+    # print(salt)
+    # print(hashed_key)
+    print(f"Public Key: {public_key}")
+    print("Private key is {}\nStore in a safe place \nNote that private key cannot be retrieved".format(d))
+    return f"{e}, {n}, {salt}, {hashed_key}"
+
+def get_keys():
+    """
+    Gets public keys from public_keys.txt
+    Return:
+        e, n
+    """
+    file_name = "public_keys.txt"
+    # Get content from Public Key file
+    with open(file_name, 'r+', encoding='utf-8') as file:
+        content = file.read().strip(" ").split(",")
+        print("Validating...")
+        time.sleep(1)
+        # create public keys if none exists
+        if content != [""]:
+            print("Validation complete")
+            public_key = content[0], content[1].strip(" ")
+            salt = content[2].strip(" ")
+            hashed_key = content[3].strip(" ")
+        else:
+            print("No keys found")
+            print("Do you want to generate keys. yes/no")
+            option = input("Enter an option: ")
+            if option.upper() == "YES":
+                generated_keys = generate_keys()
+                file.write(generated_keys)
+                content = generated_keys.strip(" ").split(",")
+                public_key = content[0], content[1].strip(" ")
+                salt = content[2].strip(" ")
+                hashed_key = content[3].strip(" ")
+    return [public_key, salt, hashed_key]
+
+
+def validate_private_key(key: str, salt: str, hashed_key) -> str:
+    rehashed_key = hashlib.sha256((salt + key).encode()).hexdigest()
+    if hashed_key == rehashed_key:
+        return True
+    else:
+        return False
+
+
 def main(p, q):
     print("Welcome to simple RSA encryption")
     while True:
@@ -105,6 +174,7 @@ def main(p, q):
         choice = input("Enter your choice: ")
         n = p * q
         phi_n = (p - 1) * (q - 1)
+        print(n)
         # select_e = [3,5,17,65537]
         e = 17  # random.choice(select_e)
         d = find_d(e, phi_n)
@@ -156,10 +226,8 @@ def main(p, q):
 
         elif choice == '4':
             exit()
-
-# print(main(7283167306650267509, 4571792070546891821))
-
-print(main(int(input("Enter p: ")), int(input("Enter q: "))))
+if __name__ == "__main__":
+    print(main(int(input("Enter p: ")), int(input("Enter q: "))))
 
 
 # TODO: if user is tryingg to decript a file or input that is in plaintext. it should warn user, instead of traceback
