@@ -32,8 +32,14 @@ def revert_ascii(message: list)-> str:
     Return: str
         Converted ascii code to plaintext
     """
-    converted_message ="".join([chr(i) for i in message]) # takes ascii numerics and converts back to their character representation
-    return converted_message
+    # converted_message ="".join([chr(i) for i in message]) # takes ascii numerics and converts back to their character representation
+    converted_message_2 = ""
+    for i in message:
+        if i <= 127:
+            converted_message_2 += chr(i)
+        else:
+            converted_message_2 += chr(10)
+    return converted_message_2
 
 # 2
 def encrypt(m: str, e: int, n: int)-> str:
@@ -50,7 +56,7 @@ def encrypt(m: str, e: int, n: int)-> str:
 
     """
     # rsa encryption formula = m^e mod n
-    converted = convert_to_ascii(m) # convert all the information in the message to ascii
+    converted = convert_to_ascii((m + "\u000A")) # convert all the information in the message to ascii
     # perform RSA encryption conversion
     cipher_text = [str(pow(i, e, n)) for i in converted]
 
@@ -102,6 +108,18 @@ def random_prime_number(n_bit):
         num = secrets.randbits(64)
     return num
 
+def hash_message(message: str, salt: str)-> str:
+    """
+    hash a message using sha256
+    Parameters:
+        message: str-> message to be hashed
+        salt: str-> string to make the hash more difficult to guess
+    Return:
+        hashed_message: str-> hashed version of message
+    """
+    hashed_message = hashlib.sha256((salt + str(message)).encode()).hexdigest()
+
+    return hashed_message
 def generate_keys():
     """
     Create RSA encryption keys
@@ -119,10 +137,7 @@ def generate_keys():
     public_key = (e, phi_n)
     chars = string.ascii_letters + string.digits
     salt = "".join(random.choice(chars) for char in range(6))
-    # print(salt)
-    hashed_key = hashlib.sha256((salt+str(d)).encode()).hexdigest()
-    # print(salt)
-    # print(hashed_key)
+    hashed_key = hash_message(d, salt)
     print(f"Public Key: {public_key}")
     print("Private key is {}\nStore in a safe place \nNote that private key cannot be retrieved".format(d))
     return f"{e}, {n}, {salt}, {hashed_key}"
@@ -159,8 +174,8 @@ def get_keys():
     return [public_key, salt, hashed_key]
 
 
-def validate_private_key(key: str, salt: str, hashed_key) -> str:
-    rehashed_key = hashlib.sha256((salt + key).encode()).hexdigest()
+def validate_private_key(key: int, salt: str, hashed_key) -> bool:
+    rehashed_key = hashlib.sha256((salt + str(key)).encode()).hexdigest()
     if hashed_key == rehashed_key:
         return True
     else:
@@ -215,8 +230,8 @@ def main(p, q):
 
         elif choice == '3':
             n_bit = int(input('How many bits should the private key be: '))
-            p =input("Enter p: ") # 7283167306650267509 # random_prime_number(n_bit)
-            q =input("Enter q: ") # 4571792070546891821 #random_prime_number(n_bit)
+            p =int(input("Enter p: ")) # 7283167306650267509 # random_prime_number(n_bit)
+            q =int(input("Enter q: ")) # 4571792070546891821 #random_prime_number(n_bit)
             phi_n = (p-1) * (q-1)
             print(phi_n, "phi")
             d = find_d(e, phi_n)
@@ -231,3 +246,4 @@ if __name__ == "__main__":
 
 
 # TODO: if user is tryingg to decript a file or input that is in plaintext. it should warn user, instead of traceback
+# TODO: hash message befure encryprion and then confirm if it is the same with hash of message after encryption.
