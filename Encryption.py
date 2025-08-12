@@ -134,7 +134,7 @@ def generate_keys():
     phi_n = (p-1)*(q-1)
     e = 65537
     d = find_d(e, phi_n)
-    public_key = (e, phi_n)
+    public_key = (e, n)
     chars = string.ascii_letters + string.digits
     salt = "".join(random.choice(chars) for char in range(6))
     hashed_key = hash_message(d, salt)
@@ -152,11 +152,11 @@ def get_keys():
     # Get content from Public Key file
     with open(file_name, 'r+', encoding='utf-8') as file:
         content = file.read().strip(" ").split(",")
-        print("Validating...")
+        print("Validating\n...")
         time.sleep(1)
         # create public keys if none exists
         if content != [""]:
-            print("Validation complete")
+            print("Validation complete\n...")
             public_key = content[0], content[1].strip(" ")
             salt = content[2].strip(" ")
             hashed_key = content[3].strip(" ")
@@ -182,18 +182,14 @@ def validate_private_key(key: int, salt: str, hashed_key) -> bool:
         return False
 
 
-def main(p, q):
+def main(d: int, n: int):
     print("Welcome to simple RSA encryption")
     while True:
-        print("1. Encrypt a file\n2. Decrypt a file\n3. Generate private key\n4. Quit")
+        print("1. Encrypt a file\n2. Decrypt a file\n3. Generate RSA key\n4. Quit")
         choice = input("Enter your choice: ")
-        n = p * q
-        phi_n = (p - 1) * (q - 1)
-        print(n)
         # select_e = [3,5,17,65537]
-        e = 17  # random.choice(select_e)
-        d = find_d(e, phi_n)
-        print(d)
+        e = 65537
+
         if choice == "1":
             print("1. Encrypt from file path\n2. Encrypt via text input")
             option = input("Enter an option: ")
@@ -221,29 +217,51 @@ def main(p, q):
                 with open(fr"{file_path}", "r", encoding="utf-8") as file:
                     decoded_message = decrypt(file.read(), d, n)
                     print(decoded_message)
-                with open(fr"{file_path}", "w+", encoding="utf-8") as file:
-                    file.write(decoded_message)
+                # with open(fr"{file_path}", "w+", encoding="utf-8") as file:
+                #     file.write(decoded_message)
             elif option == '2':
                 encrypted_message = input('Enter encrypted message: ')
                 decrypted_message = decrypt(encrypted_message, d, n)
                 return decrypted_message
 
         elif choice == '3':
-            n_bit = int(input('How many bits should the private key be: '))
-            p =int(input("Enter p: ")) # 7283167306650267509 # random_prime_number(n_bit)
-            q =int(input("Enter q: ")) # 4571792070546891821 #random_prime_number(n_bit)
-            phi_n = (p-1) * (q-1)
-            print(phi_n, "phi")
-            d = find_d(e, phi_n)
-
-            print(f'Your private key is: {d}')
-            return d
+            generate_keys()
 
         elif choice == '4':
             exit()
+
 if __name__ == "__main__":
-    print(main(int(input("Enter p: ")), int(input("Enter q: "))))
+    while True:
+        print("Do You already have existing keys")
+        key_option = input("Answer Yes or No: ")
+        if key_option.upper() == "YES":
+            public_key, private_key = input("Enter public key: "), input("Enter private key: ")
+            if public_key.isdigit() and private_key.isdigit():
+                print(main(int(private_key), int(public_key)))
+            else:
+                print("Public key and private keys should be digits\n")
+                continue
+
+        elif key_option.upper() == 'NO':
+            print("Proceeding to generate keys to initiate program... ")
+            option = input("Type YES to proceed and NO to exit: ")
+            if option.upper() == "YES":
+                e_n_salt_hash = generate_keys().strip(" ").split(",")
+                n = int(e_n_salt_hash[1].strip(" ")) # Extract public key from e_n_salt_hash
+                print(f"N: {n}")
+                d = int(input("Paste private key: ")) # Request private key
+                print(main(d,n))
 
 
-# TODO: if user is tryingg to decript a file or input that is in plaintext. it should warn user, instead of traceback
-# TODO: hash message befure encryprion and then confirm if it is the same with hash of message after encryption.
+            elif key_option.upper() == "NO":
+                continue
+
+            else:
+                print("Invalid input")
+
+        else:
+            print("Invalid input")
+
+
+# TODO: Debug if user is tryingg to decript a file or input that is in plaintext. it should warn user, instead of traceback
+# TODO: Allow user to generate keys public and private key at will
